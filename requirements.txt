@@ -1,0 +1,4 @@
+bleak>=0.22
+pynput>=1.7
+playwright>=1.45
+pillow>=10

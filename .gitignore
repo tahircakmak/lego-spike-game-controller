@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Personal to one controller and computer: each setup calibrates its own (bridge.py does it automatically)
+calibration.json
+
+# Chrome profile with the Microsoft sign-in (now stored outside the project; this is a safety net)
+.chrome-profile/
+
+# Raw screen recordings (may show things you don't want to publish); demos are made from them
+recordings/
+
+# macOS
+.DS_Store
