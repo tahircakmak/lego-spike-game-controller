@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SPIKE V2 controller dashboard</title>
+<style>
+  :root {
+    --bg: #111318; --card: #1a1d24; --line: #2a2f39; --text: #e6e8ec; --dim: #8a93a3;
+    --green: #3cb44b; --red: #e6194b; --blue: #4c7bf0; --yellow: #f5c518; --orange: #ff9f43;
+    --teal: #39c6d6; --lego: #e9e9e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.35 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  #stage { width: 1280px; height: 720px; padding: 18px 24px; display: grid; gap: 14px;
+           grid-template-columns: 1fr 1fr; grid-template-rows: 46px minmax(0, 1fr) 170px; overflow: hidden; }
+  header { grid-column: 1 / 3; display: flex; align-items: center; gap: 14px; }
+  header h1 { font-size: 22px; margin: 0; font-weight: 700; letter-spacing: .2px; }
+  header .sub { color: var(--dim); font-size: 14px; }
+  .badges { margin-left: auto; display: flex; gap: 10px; }
+  .badge { padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; letter-spacing: .6px; }
+  .badge.gameplay { background: #1f4d2a; color: #9be38f; }
+  .badge.inventory { background: #4d3d12; color: #ffd66b; }
+  .badge.standing { background: #26314a; color: #9db8ff; }
+  .badge.moving { background: #1e4652; color: #7fe3f0; }
+  .badge.off { display: none; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; position: relative; overflow: hidden; min-height: 0; }
+  .card h2 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); font-weight: 600; }
+  .card svg { width: 100%; height: calc(100% - 22px); display: block; }
+  .arrow { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 30px; color: var(--dim); z-index: 2; }
+  #status { display: grid; grid-template-columns: 170px 1fr; gap: 14px; }
+  #log { font: 14px/1.5 Menlo, Monaco, monospace; color: #cfd6e2; white-space: pre; overflow: hidden; }
+  #log div:last-child { color: #9be38f; }
+  #log .muted { color: var(--dim); }
+  .legend { font-size: 13px; color: var(--dim); }
+  text { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <h1>LEGO SPIKE V2 controller</h1>
+    <span class="sub">→ virtual Xbox controller → Chrome Gamepad API → Xbox Remote Play</span>
+    <div class="badges">
+      <span id="b-mode" class="badge gameplay">GAMEPLAY</span>
+      <span id="b-move" class="badge standing">STANDING</span>
+    </div>
+  </header>
+
+  <!-- LEGO controller -->
+  <div class="card">
+    <h2>LEGO controller (from the hub)</h2>
+    <svg viewBox="0 0 560 400">
+      <!-- shoulder triggers: one large motor -->
+      <g transform="translate(280,104)">
+        <path d="M-88,0 A88,88 0 0 1 88,0" fill="none" stroke="#2f3541" stroke-width="22"/>
+        <path id="zone-l" d="M-88,0 A88,88 0 0 1 -62.2,-62.2" fill="none" stroke="#3a3322" stroke-width="22"/>
+        <path id="zone-r" d="M62.2,-62.2 A88,88 0 0 1 88,0" fill="none" stroke="#3a3322" stroke-width="22"/>
+        <circle r="26" fill="#d9d9d4" stroke="#9b9b95" stroke-width="2"/>
+        <line id="trig-needle" x1="0" y1="0" x2="0" y2="-80" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+        <circle r="7" fill="#f2c200"/>
+        <text x="-104" y="18" fill="#8a93a3" font-size="15" text-anchor="middle">L</text>
+        <text x="104" y="18" fill="#8a93a3" font-size="15" text-anchor="middle">R</text>
+        <text id="trig-label" x="0" y="44" fill="#cfd6e2" font-size="14" text-anchor="middle">shoulder triggers · 0°</text>
+      </g>
+      <!-- hub -->
+      <g transform="translate(280,250)">
+        <rect x="-96" y="-90" width="192" height="180" rx="20" fill="var(--lego)" stroke="#b9b9b3" stroke-width="2"/>
+        <rect x="-62" y="-72" width="124" height="104" rx="10" fill="#26292f"/>
+        <g id="matrix"></g>
+        <circle cx="0" cy="-20" r="44" fill="none" stroke="#4a5160" stroke-dasharray="3 4"/>
+        <circle id="tilt-dot" cx="0" cy="-20" r="11" fill="#6cb6ff" stroke="#fff" stroke-width="2"/>
+        <rect id="hub-left" x="-66" y="48" width="34" height="22" rx="8" fill="#b9b9b3"/>
+        <circle cx="0" cy="59" r="16" fill="#cfcfca" stroke="#a5a59f"/>
+        <rect id="hub-right" x="32" y="48" width="34" height="22" rx="8" fill="#b9b9b3"/>
+        <text x="0" y="112" fill="#cfd6e2" font-size="14" text-anchor="middle">hub · tilt + left / right buttons</text>
+      </g>
+      <!-- left motorised button -->
+      <g transform="translate(78,250)">
+        <circle r="30" fill="#d9d9d4" stroke="#9b9b95" stroke-width="2"/>
+        <line id="lb-arm" x1="0" y1="0" x2="0" y2="-62" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+        <circle r="7" fill="#39c6d6"/>
+        <text x="0" y="58" fill="#cfd6e2" font-size="14" text-anchor="middle">left button</text>
+        <text id="lb-state" x="0" y="78" fill="#8a93a3" font-size="13" text-anchor="middle">rest</text>
+      </g>
+      <!-- right motorised button -->
+      <g transform="translate(482,160)">
+        <circle r="30" fill="#d9d9d4" stroke="#9b9b95" stroke-width="2"/>
+        <line id="rb-arm" x1="0" y1="0" x2="0" y2="-62" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+        <circle r="7" fill="#39c6d6"/>
+        <text x="0" y="58" fill="#cfd6e2" font-size="14" text-anchor="middle">right button</text>
+        <text id="rb-state" x="0" y="78" fill="#8a93a3" font-size="13" text-anchor="middle">rest</text>
+      </g>
+      <!-- force sensor -->
+      <g transform="translate(482,318)">
+        <circle r="30" fill="#d9d9d4" stroke="#9b9b95" stroke-width="2"/>
+        <circle id="force" r="19" fill="#222"/>
+        <text x="0" y="52" fill="#cfd6e2" font-size="14" text-anchor="middle">force sensor</text>
+      </g>
+    </svg>
+  </div>
+  <div class="arrow" style="top:330px">➜</div>
+
+  <!-- Xbox controller -->
+  <div class="card">
+    <h2>Xbox controller (what Chrome's Gamepad API sees)</h2>
+    <svg viewBox="0 0 560 400">
+      <g transform="translate(0,20)">
+        <!-- triggers -->
+        <rect x="104" y="6" width="96" height="30" rx="8" fill="#2b2f36" stroke="#444b57"/>
+        <rect id="LT-fill" x="104" y="36" width="96" height="0" rx="8" fill="var(--orange)"/>
+        <text x="152" y="27" fill="#cfd6e2" font-size="15" text-anchor="middle" font-weight="700">LT</text>
+        <rect x="360" y="6" width="96" height="30" rx="8" fill="#2b2f36" stroke="#444b57"/>
+        <rect id="RT-fill" x="360" y="36" width="96" height="0" rx="8" fill="var(--orange)"/>
+        <text x="408" y="27" fill="#cfd6e2" font-size="15" text-anchor="middle" font-weight="700">RT</text>
+        <!-- bumpers -->
+        <rect id="LB" x="96" y="46" width="112" height="24" rx="12" fill="#3a404b"/>
+        <text x="152" y="63" fill="#cfd6e2" font-size="14" text-anchor="middle" font-weight="700">LB</text>
+        <rect id="RB" x="352" y="46" width="112" height="24" rx="12" fill="#3a404b"/>
+        <text x="408" y="63" fill="#cfd6e2" font-size="14" text-anchor="middle" font-weight="700">RB</text>
+        <!-- body -->
+        <path d="M120,78 Q280,56 440,78 Q522,92 538,210 Q550,322 482,334 Q440,340 404,282 L156,282 Q120,340 78,334 Q10,322 22,210 Q38,92 120,78 Z"
+              fill="#22262d" stroke="#3b4250" stroke-width="2"/>
+        <!-- xbox / view / menu -->
+        <circle id="XBOX" cx="280" cy="112" r="17" fill="#3a404b"/>
+        <rect id="VIEW" x="232" y="146" width="26" height="16" rx="8" fill="#3a404b"/>
+        <rect id="MENU" x="302" y="146" width="26" height="16" rx="8" fill="#3a404b"/>
+        <text x="245" y="180" fill="#8a93a3" font-size="11" text-anchor="middle">View</text>
+        <text x="315" y="180" fill="#8a93a3" font-size="11" text-anchor="middle">Menu</text>
+        <!-- left stick -->
+        <circle cx="150" cy="154" r="38" fill="#191c22" stroke="#3b4250" stroke-width="2"/>
+        <circle id="LS" cx="150" cy="154" r="22" fill="#3a404b" stroke="#596173" stroke-width="2"/>
+        <!-- d-pad -->
+        <g transform="translate(212,236)">
+          <rect id="UP" x="-11" y="-38" width="22" height="28" rx="4" fill="#3a404b"/>
+          <rect id="DOWN" x="-11" y="10" width="22" height="28" rx="4" fill="#3a404b"/>
+          <rect id="LEFT" x="-38" y="-11" width="28" height="22" rx="4" fill="#3a404b"/>
+          <rect id="RIGHT" x="10" y="-11" width="28" height="22" rx="4" fill="#3a404b"/>
+          <rect x="-11" y="-11" width="22" height="22" fill="#3a404b"/>
+        </g>
+        <!-- right stick -->
+        <circle cx="352" cy="236" r="34" fill="#191c22" stroke="#3b4250" stroke-width="2"/>
+        <circle id="RS" cx="352" cy="236" r="20" fill="#3a404b" stroke="#596173" stroke-width="2"/>
+        <!-- face buttons -->
+        <g id="face" font-weight="700" font-size="16" text-anchor="middle">
+          <circle id="Y" cx="410" cy="116" r="19"/><text x="410" y="122" fill="#111">Y</text>
+          <circle id="X" cx="372" cy="154" r="19"/><text x="372" y="160" fill="#111">X</text>
+          <circle id="B" cx="448" cy="154" r="19"/><text x="448" y="160" fill="#111">B</text>
+          <circle id="A" cx="410" cy="192" r="19"/><text x="410" y="198" fill="#111">A</text>
+        </g>
+      </g>
+      <text id="pad-id" x="280" y="384" fill="#8a93a3" font-size="13" text-anchor="middle">waiting for navigator.getGamepads()…</text>
+    </svg>
+  </div>
+
+  <!-- status -->
+  <div class="card" style="grid-column: 1 / 2">
+    <h2>Walking direction</h2>
+    <div id="status">
+      <svg viewBox="0 0 160 150" style="height:126px">
+        <circle cx="80" cy="72" r="58" fill="#15181e" stroke="#2f3541" stroke-width="2"/>
+        <text x="80" y="10" fill="#8a93a3" font-size="10" text-anchor="middle">screen up</text>
+        <g id="compass" transform="translate(80,72)">
+          <line x1="0" y1="0" x2="0" y2="-46" stroke="#7fe3f0" stroke-width="6" stroke-linecap="round"/>
+          <path d="M-11,-36 L0,-56 L11,-36 Z" fill="#7fe3f0"/>
+        </g>
+        <circle cx="80" cy="72" r="6" fill="#cfd6e2"/>
+      </svg>
+      <div class="legend" style="align-self:center">
+        <div id="move-text" style="font-size:20px;color:var(--text);font-weight:700">STANDING</div>
+        <div id="steer-text" style="margin-top:6px">push the right button back to start walking</div>
+        <div id="stick-text" style="margin-top:10px;font:13px Menlo,monospace">left stick 0.00, 0.00</div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="grid-column: 2 / 3">
+    <h2>Action log</h2>
+    <div id="log"><div class="muted">waiting for the controller…</div></div>
+  </div>
+</div>
+
+<script>
+const BUTTONS = ["A", "B", "X", "Y", "LB", "RB", "LT", "RT", "VIEW", "MENU", "LSB", "RSB", "UP", "DOWN", "LEFT", "RIGHT", "XBOX"];
+const FACE = { A: "#3cb44b", B: "#e6194b", X: "#4c7bf0", Y: "#f5c518" };
+const $ = (id) => document.getElementById(id);
+let status = null;
+
+// 5x5 light matrix of the hub, showing a smiley like hub_program.py does.
+const smile = ["01010", "01010", "00000", "10001", "01110"];
+smile.forEach((row, y) => [...row].forEach((on, x) => {
+  const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  c.setAttribute("cx", -48 + x * 24); c.setAttribute("cy", -62 + y * 21); c.setAttribute("r", 6);
+  c.setAttribute("fill", on === "1" ? "#fff6c9" : "#3a3f48");
+  $("matrix").appendChild(c);
+}));
+
+window.__spikeStatus = { set(s) { status = s; } };
+
+function dim(hex) { return hex + "55"; }
+
+function drawPad(pad) {
+  if (!pad) return;
+  $("pad-id").textContent = `${pad.id} · mapping "${pad.mapping}"`;
+  const on = (name) => pad.buttons[BUTTONS.indexOf(name)]?.pressed;
+  for (const [name, color] of Object.entries(FACE)) {
+    $(name).setAttribute("fill", on(name) ? color : dim(color));
+    $(name).setAttribute("stroke", on(name) ? "#fff" : "none");
+    $(name).setAttribute("stroke-width", 3);
+  }
+  for (const name of ["LB", "RB", "VIEW", "MENU", "XBOX", "UP", "DOWN", "LEFT", "RIGHT"]) {
+    $(name).setAttribute("fill", on(name) ? "#ff9f43" : "#3a404b");
+  }
+  for (const name of ["LT", "RT"]) {
+    const v = pad.buttons[BUTTONS.indexOf(name)]?.value || 0;
+    $(name + "-fill").setAttribute("y", 36 - 30 * v);
+    $(name + "-fill").setAttribute("height", 30 * v);
+  }
+  const [lx, ly, rx, ry] = pad.axes;
+  $("LS").setAttribute("cx", 150 + lx * 16); $("LS").setAttribute("cy", 154 + ly * 16);
+  $("LS").setAttribute("fill", Math.hypot(lx, ly) > 0.05 ? "#4c7bf0" : "#3a404b");
+  $("RS").setAttribute("cx", 352 + rx * 14); $("RS").setAttribute("cy", 236 + ry * 14);
+  $("RS").setAttribute("fill", Math.hypot(rx, ry) > 0.05 ? "#4c7bf0" : "#3a404b");
+  $("stick-text").textContent = `left stick ${lx.toFixed(2)}, ${ly.toFixed(2)}`;
+}
+
+function arm(id, angle, state) {
+  const shown = Math.max(-70, Math.min(70, angle)) * 0.9;
+  $(id + "-arm").setAttribute("transform", `rotate(${shown})`);
+  const color = state === "+" ? "#3cb44b" : state === "-" ? "#ff9f43" : "#ffffff";
+  $(id + "-arm").setAttribute("stroke", color);
+  $(id + "-state").textContent = state === "+" ? "pressed" : state === "-" ? "pushed back" : `rest · ${Math.round(angle)}°`;
+  $(id + "-state").setAttribute("fill", state === "+" ? "#9be38f" : state === "-" ? "#ffc58a" : "#8a93a3");
+}
+
+function drawStatus(s) {
+  if (!s) return;
+  const inv = s.mode === "INVENTORY";
+  $("b-mode").textContent = s.mode;
+  $("b-mode").className = "badge " + (inv ? "inventory" : "gameplay");
+  $("b-move").textContent = s.moving ? "MOVING" : "STANDING";
+  $("b-move").className = "badge " + (inv ? "off" : s.moving ? "moving" : "standing");
+
+  // LEGO side
+  const [forward, right] = s.tilt;
+  const k = 44 / 30;
+  const tx = Math.max(-44, Math.min(44, right * k)), ty = Math.max(-44, Math.min(44, -forward * k));
+  $("tilt-dot").setAttribute("cx", tx); $("tilt-dot").setAttribute("cy", -20 + ty);
+  $("hub-left").setAttribute("fill", s.hub.left ? "#ff9f43" : "#b9b9b3");
+  $("hub-right").setAttribute("fill", s.hub.right ? "#ff9f43" : "#b9b9b3");
+  $("force").setAttribute("fill", s.force ? "#e6194b" : "#222");
+  arm("lb", s.angles.left_button, s.levers.left_button);
+  arm("rb", -s.angles.right_button, s.levers.right_button);
+  const t = s.angles.trigger;
+  $("trig-needle").setAttribute("transform", `rotate(${Math.max(-88, Math.min(88, t * 1.6))})`);
+  const tState = s.levers.trigger;
+  $("trig-needle").setAttribute("stroke", tState === "+" ? (s.ranged ? "#ff9f43" : "#3cb44b") : tState === "-" ? "#3cb44b" : "#fff");
+  $("zone-l").setAttribute("stroke", tState === "-" ? "#5b4a1d" : "#3a3322");
+  $("zone-r").setAttribute("stroke", tState === "+" ? "#5b4a1d" : "#3a3322");
+  const side = t > 2 ? "right" : t < -2 ? "left" : "";
+  $("trig-label").textContent = `shoulder triggers · ${side ? side + " " : ""}${Math.abs(Math.round(t))}°` +
+    (s.ranged ? " · ranged" : "");
+
+  // walking direction
+  $("compass").setAttribute("transform", `translate(80,72) rotate(${s.heading})`);
+  $("compass").setAttribute("opacity", s.moving && !inv ? 1 : 0.25);
+  $("move-text").textContent = inv ? "INVENTORY" : s.moving ? "MOVING" : "STANDING";
+  $("steer-text").textContent = inv ? "triggers move the selected slot"
+    : s.moving ? (s.steer ? `steering ${s.steer}` : `walking at ${Math.round(s.heading)}°`)
+    : "right trigger = ranged attack";
+
+  $("log").innerHTML = s.log.length ? s.log.slice(-6).map((l) => `<div>${l.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/ -> /g, " → ")}</div>`).join("")
+    : '<div class="muted">waiting for the controller…</div>';
+}
+
+function frame() {
+  drawPad(navigator.getGamepads()[0]);
+  drawStatus(status);
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

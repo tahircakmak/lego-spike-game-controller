@@ -188,7 +188,11 @@ If the game's inventory ever closes some other way while the terminal still show
 | `controller.py` | Mac | `ControllerLogic`: the rules and state machine |
 | `gamepad.py` | Mac + Chrome | `VirtualGamepad` state and `ChromeGamepad` (the virtual pad in Chrome) |
 | `config.py` | Mac | every tuning value and Xbox mapping |
+| `dashboard.html` | Chrome | the live dashboard (`bridge.py --tester`): LEGO controller next to `navigator.getGamepads()` |
 | `check_chrome.py` | Mac + Chrome | checks without the hub that Chrome's Gamepad API sees every input |
+| `recorder.py` | Mac + Chrome | records the Remote Play game picture (or the dashboard) through Chrome's screencast |
+| `make_demo.py` | Mac | turns a recording into an MP4 and a GIF with a caption bar |
+| `make_media.py` | Mac + Chrome | scripted scenes through the real software, for the README's screenshots and GIFs |
 | `tests/` | Mac | unit tests: rules, lever logic, hub modes and spring, config injection |
 | `spike/` | Mac | SPIKE Prime Bluetooth protocol client (from V1) |
 | `calibration.json` | Mac | your ports, lever directions and tilt calibration (not in git) |

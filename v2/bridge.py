@@ -3,8 +3,9 @@ LEGO SPIKE Prime V2 controller -> virtual Xbox controller -> Chrome -> Xbox Remo
 
     python bridge.py --calibrate     # first time: find the levers and the tilt directions
     python bridge.py                 # play: Chrome opens on Xbox Remote Play
-    python bridge.py --tester        # Chrome opens a page that shows the virtual controller
+    python bridge.py --tester        # Chrome opens the dashboard: LEGO controller + virtual Xbox controller
     python bridge.py --no-chrome     # only print what the controller does
+    python bridge.py --record        # also record the game (or the dashboard) for make_demo.py
 
 Before running: turn the hub on, press its Bluetooth button, close the SPIKE app, and
 leave both motorised buttons and the shoulder triggers at rest (that position is 0°).
@@ -273,8 +274,14 @@ class HubEvents:
         return True
 
 
-async def play(hub: SpikeHub, reader: LineReader, calibration: dict, chrome) -> None:
-    logic = ControllerLogic(log=lambda text: print(f"  {text}"))
+async def play(hub: SpikeHub, reader: LineReader, calibration: dict, chrome, dashboard: bool = False,
+               recorder=None) -> None:
+    def log(text: str) -> None:
+        print(f"  {text}")
+        if recorder:
+            recorder.event(text)  # for the demo captions
+
+    logic = ControllerLogic(log=log)
     events = HubEvents(logic, calibration)
     last_heard = time.monotonic()
     silent = False
@@ -297,6 +304,8 @@ async def play(hub: SpikeHub, reader: LineReader, calibration: dict, chrome) -> 
             logic.update(now)
             if chrome:
                 await chrome.push(logic.pad.snapshot(now))
+                if dashboard:
+                    await chrome.push_status(logic.dashboard())
             status = (logic.mode, logic.moving, tuple(logic.pad.pressed(now)))
             if status != last_status:
                 print(logic.status(now))
@@ -317,11 +326,16 @@ async def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--calibrate", action="store_true", help="find the levers and the tilt directions again")
     where = parser.add_mutually_exclusive_group()
-    where.add_argument("--tester", action="store_true", help="open a gamepad test page instead of Remote Play")
+    where.add_argument("--tester", action="store_true",
+                       help="open the dashboard (LEGO controller + virtual Xbox controller) instead of Remote Play")
     where.add_argument("--no-chrome", action="store_true", help="don't open Chrome, only print what happens")
+    parser.add_argument("--record", action="store_true",
+                        help="record the Remote Play game picture (or the dashboard with --tester) for make_demo.py")
     parser.add_argument("--slot", type=int, default=0, help="hub program slot 0-19 (default 0)")
     parser.add_argument("--name", help="only connect to the hub with this Bluetooth name")
     args = parser.parse_args()
+    if args.record and args.no_chrome:
+        parser.error("--record needs Chrome")
     check_config()
 
     reader = LineReader()
@@ -342,12 +356,27 @@ async def main() -> None:
                 chrome = None
                 if not args.no_chrome:
                     url = TESTER_URL if args.tester else cfg.REMOTE_PLAY_URL
-                    print(f"Opening {'the gamepad tester' if args.tester else 'Xbox Remote Play'} in Chrome...")
+                    print(f"Opening {'the dashboard' if args.tester else 'Xbox Remote Play'} in Chrome...")
                     chrome = await stack.enter_async_context(ChromeGamepad(url, _profile_dir()))
                     if not args.tester:
                         print("Sign in if asked, pick your Xbox and press Remote play.\n"
                               "The SPIKE controller is the page's Xbox controller.")
-                await play(hub, reader, calibration, chrome)
+                recorder = None
+                if args.record:
+                    from recorder import Recorder
+
+                    recorder = Recorder(chrome.page, "#stage" if args.tester else None)
+                    await recorder.start()
+                    print("Recording" + (" the game picture once it shows up" if not args.tester else " the dashboard")
+                          + "...")
+                try:
+                    await play(hub, reader, calibration, chrome, dashboard=args.tester, recorder=recorder)
+                finally:
+                    if recorder:
+                        folder = await recorder.stop()
+                        print(f"Recording saved in {folder.relative_to(HERE)} ({len(recorder.frames)} frames). "
+                              f"Make the demo with: ../.venv/bin/python make_demo.py"
+                              + (" --no-captions" if args.tester else ""))
         finally:
             if hub.connected and not hub.program_stopped:
                 await hub.stop_program(args.slot)

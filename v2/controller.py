@@ -17,6 +17,7 @@ No I/O happens here: bridge.py feeds events in and sends the pad's state to Chro
 """
 
 import math
+from collections import deque
 
 import config as cfg
 from gamepad import BUTTON_INDEX, VirtualGamepad
@@ -77,7 +78,13 @@ class GyroGestures:
 
 class ControllerLogic:
     def __init__(self, log=print):
-        self.log = log
+        self.recent_log: deque[str] = deque(maxlen=7)  # for the dashboard
+
+        def log_and_keep(text: str) -> None:
+            self.recent_log.append(text)
+            log(text)
+
+        self.log = log_and_keep
         self.pad = VirtualGamepad(cfg.MIN_PRESS_S)
         self.gyro = GyroGestures()
         self.mode = GAMEPLAY
@@ -185,8 +192,7 @@ class ControllerLogic:
             if side:
                 button = INVENTORY_MAP[f"trigger_{side}"]
                 self._send(button, now)
-                self.log(f"{side.capitalize()} shoulder trigger -> {button} (slot {side}); "
-                         f"hold {cfg.INVENTORY_CLOSE_HOLD_S} s to close the inventory")
+                self.log(f"{side.capitalize()} shoulder trigger -> {button} (slot {side})")
         elif self.moving:
             if side or self.steer:
                 self.log(f"{side.capitalize()} shoulder trigger -> steering {side}" if side else "Steering released")
@@ -251,6 +257,16 @@ class ControllerLogic:
     def _heading_vector(self, length: float) -> tuple[float, float]:
         h = math.radians(self.heading)
         return (length * math.sin(h), -length * math.cos(h))  # Gamepad API: up is -1
+
+    def dashboard(self) -> dict:
+        """Everything the dashboard page shows about the LEGO side and the modes."""
+        return {
+            "mode": self.mode, "moving": self.moving, "heading": round(self.heading, 1),
+            "steer": self.steer, "ranged": self.ranged, "force": self.force_down,
+            "hub": dict(self.hub_buttons), "levers": dict(self.levers), "angles": dict(self.angles),
+            "tilt": [round(self.gyro.forward, 1), round(self.gyro.right, 1)],
+            "log": list(self.recent_log),
+        }
 
     def status(self, now: float) -> str:
         state = self.mode if self.mode == INVENTORY else f"{self.mode}/{'MOVING' if self.moving else 'STANDING'}"

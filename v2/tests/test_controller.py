@@ -270,6 +270,15 @@ class Inventory(Base):
         self.at(0.5)
         self.assertEqual(self.c.pad.snapshot(self.t)["axes"][:2], [0.0, 0.0])
 
+    def test_dashboard_snapshot(self):
+        import json
+        self.open()
+        self.c.on_force(True, self.t)
+        state = self.c.dashboard()
+        self.assertEqual((state["mode"], state["force"]), (INVENTORY, True))
+        self.assertIn("Force sensor pressed -> a down", state["log"])
+        json.dumps(state)  # it is sent to the page as JSON
+
     def test_release_all(self):
         self.c.on_force(True, self.t)
         self.c.on_lever("trigger", "+", self.t)

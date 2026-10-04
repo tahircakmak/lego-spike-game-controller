@@ -13,6 +13,8 @@ a process create a virtual HID device (IOHIDUserDevice / CoreHID) with Apple's r
 one. The page-level pad is what V1 used with Remote Play, and no keyboard is involved.
 """
 
+from pathlib import Path
+
 from playwright.async_api import Error as PlaywrightError
 
 # W3C "standard" gamepad layout: index = position in Gamepad.buttons.
@@ -136,28 +138,10 @@ VIRTUAL_PAD_JS = """
 })();
 """
 
-# A page that shows what navigator.getGamepads() returns, for checking without the Xbox.
-TESTER_URL = "https://gamepad-tester.spike.invalid/"
-TESTER_HTML = """<!doctype html><meta charset="utf-8"><title>SPIKE V2 gamepad check</title>
-<style>body{font:16px system-ui;background:#15171b;color:#ddd;margin:24px}
-.b{display:inline-block;min-width:84px;margin:3px;padding:8px;border-radius:6px;background:#333;text-align:center}
-.on{background:#2e9e4f;color:#fff}pre{font-size:15px}</style>
-<h2>navigator.getGamepads()</h2><div id="pads">no gamepad yet</div><pre id="axes"></pre>
-<script>
-const names = %s;
-function frame() {
-  const pad = navigator.getGamepads()[0];
-  if (pad) {
-    document.getElementById("pads").innerHTML = `<p>${pad.id} · mapping "${pad.mapping}"</p>` +
-      pad.buttons.map((b, i) => `<span class="b ${b.pressed ? "on" : ""}">${names[i]}</span>`).join("");
-    document.getElementById("axes").textContent =
-      "left stick  " + pad.axes.slice(0, 2).map(v => v.toFixed(2)).join(", ") +
-      "\\nright stick " + pad.axes.slice(2, 4).map(v => v.toFixed(2)).join(", ");
-  }
-  requestAnimationFrame(frame);
-}
-frame();
-</script>""" % BUTTONS
+# The live dashboard (dashboard.html): the LEGO controller next to what navigator.getGamepads()
+# returns. Served at a made-up https address that Playwright answers itself, so it needs no server.
+TESTER_URL = "https://dashboard.spike.invalid/"
+DASHBOARD = Path(__file__).parent / "dashboard.html"
 
 
 class ChromeGamepad:
@@ -173,6 +157,7 @@ class ChromeGamepad:
         self.profile_dir = profile_dir
         self.headless = headless
         self._last_state = None
+        self._last_status = None
 
     async def __aenter__(self):
         from playwright.async_api import async_playwright
@@ -187,7 +172,8 @@ class ChromeGamepad:
             args=["--start-maximized"],
         )
         await self.context.add_init_script(VIRTUAL_PAD_JS)
-        await self.context.route(TESTER_URL, lambda route: route.fulfill(content_type="text/html", body=TESTER_HTML))
+        await self.context.route(TESTER_URL, lambda route: route.fulfill(content_type="text/html",
+                                                                          body=DASHBOARD.read_text()))
         self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
         await self.page.goto(self.url)
         return self
@@ -212,6 +198,16 @@ class ChromeGamepad:
             self._last_state = state
         except PlaywrightError:
             pass  # the page is navigating; the next push retries
+
+    async def push_status(self, status: dict) -> None:
+        """Send the controller's mode and inputs to the dashboard page (ignored by other pages)."""
+        if status == self._last_status or self.closed:
+            return
+        try:
+            await self.page.evaluate("s => window.__spikeStatus && window.__spikeStatus.set(s)", status)
+            self._last_status = status
+        except PlaywrightError:
+            pass
 
     async def read_back(self) -> dict | None:
         """What the page itself sees in navigator.getGamepads()[0] (for checks)."""
