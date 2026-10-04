@@ -1,6 +1,6 @@
 # LEGO SPIKE controller for Minecraft Dungeons
 
-A LEGO SPIKE Prime game controller that plays Minecraft Dungeons on an Xbox through Xbox Remote Play in Chrome. The controller shows up in Chrome as a virtual Xbox controller. Built by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak) (controller design and LEGO build) and [@tahircakmak](https://github.com/tahircakmak) (software).
+A LEGO SPIKE Prime game controller that plays Minecraft Dungeons on an Xbox through Xbox Remote Play in Chrome. The controller shows up in Chrome as a virtual Xbox controller. Built by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak) (controller design and LEGO build) and [@tahircakmak](https://github.com/tahircakmak) (software). [Building tutorial on YouTube](https://www.youtube.com/watch?v=3bgCyz23Tdw&t=104s) by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak).
 
 | Folder | Project |
 |---|---|
