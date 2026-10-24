@@ -6,6 +6,9 @@ __pycache__/
 # Personal to one controller and computer: each setup calibrates its own (bridge.py does it automatically)
 calibration.json
 
+# customsoftwarev1: which loadout was open last (personal)
+customsoftwarev1/settings.json
+
 # Chrome profile with the Microsoft sign-in (now stored outside the project; this is a safety net)
 .chrome-profile/
 

@@ -1,0 +1,326 @@
+{
+  "name": "Example: every feature",
+  "description": "Shows every feature on the demo layout (A medium motor, B large motor, C force sensor, D distance sensor, E medium motor, F large motor). Try it with --no-hub and the sliders.",
+  "settings": {
+    "min_press_ms": 100
+  },
+  "variables": [
+    {
+      "name": "ammo",
+      "initial": 5,
+      "min": 0,
+      "max": 5,
+      "wrap": false
+    },
+    {
+      "name": "mode",
+      "initial": 0,
+      "min": 0,
+      "max": 1,
+      "wrap": true
+    }
+  ],
+  "systems": [
+    {
+      "id": "main",
+      "name": "Main",
+      "enabled": true,
+      "conditions": []
+    },
+    {
+      "id": "gyro",
+      "name": "Gyro walking (mode 1)",
+      "enabled": true,
+      "conditions": [
+        {
+          "source": "var:mode",
+          "mode": "at",
+          "a": 1,
+          "b": null
+        }
+      ]
+    }
+  ],
+  "bindings": [
+    {
+      "id": "jump",
+      "name": "Motor A pressed: jump (A)",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:A",
+      "zone": {
+        "mode": "above",
+        "a": 25,
+        "b": null,
+        "hysteresis": 8
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dpad",
+      "name": "Motor E turned to -30\u00b0: D-pad up",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:E",
+      "zone": {
+        "mode": "below",
+        "a": -30,
+        "b": null,
+        "hysteresis": 5
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "dpad_up"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "force_remap",
+      "name": "Force sensor: D-pad up becomes Y",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "force:C",
+      "zone": {
+        "mode": "above",
+        "a": 10,
+        "b": null,
+        "hysteresis": 5
+      },
+      "actions": [
+        {
+          "type": "remap",
+          "from": "dpad_up",
+          "to": "y",
+          "targets": [
+            "dpad"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rs_x",
+      "name": "Motor F: right stick west-east",
+      "system": "main",
+      "kind": "axis",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:F",
+      "output": "rs:x",
+      "deadzone": [
+        -10,
+        24
+      ],
+      "range": [
+        -90,
+        90
+      ],
+      "invert": false
+    },
+    {
+      "id": "ls_y",
+      "name": "Motor B: left stick south-north",
+      "system": "main",
+      "kind": "axis",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:B",
+      "output": "ls:y",
+      "deadzone": [
+        -5,
+        5
+      ],
+      "range": null,
+      "invert": false
+    },
+    {
+      "id": "swap",
+      "name": "Hand closer than 10 cm: left stick becomes right stick",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "distance:D",
+      "zone": {
+        "mode": "below",
+        "a": 10,
+        "b": null,
+        "hysteresis": 2
+      },
+      "actions": [
+        {
+          "type": "remap",
+          "from": "ls",
+          "to": "rs",
+          "targets": []
+        }
+      ]
+    },
+    {
+      "id": "artifacts",
+      "name": "Hand 10-20 cm: all artifacts (Y + B + RB)",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "distance:D",
+      "zone": {
+        "mode": "between",
+        "a": 10,
+        "b": 20,
+        "hysteresis": 2
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "y",
+            "b",
+            "rb"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "shoot",
+      "name": "Left hub button: shoot (RT), uses 1 ammo",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [
+        {
+          "source": "var:ammo",
+          "mode": "above",
+          "a": 1,
+          "b": null
+        }
+      ],
+      "source": "hub:left",
+      "zone": {
+        "mode": "above",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "rt"
+          ]
+        },
+        {
+          "type": "var_add",
+          "on": "activate",
+          "repeat_ms": 0,
+          "var": "ammo",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "name": "Ammo at 0: press X once",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "var:ammo",
+      "zone": {
+        "mode": "at",
+        "a": 0,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "x"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "reload",
+      "name": "Motor A pulled back: reload ammo",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:A",
+      "zone": {
+        "mode": "below",
+        "a": -25,
+        "b": null,
+        "hysteresis": 5
+      },
+      "actions": [
+        {
+          "type": "var_reset",
+          "on": "activate",
+          "var": "ammo"
+        }
+      ]
+    },
+    {
+      "id": "mode",
+      "name": "Right hub button: switch mode 0 / 1",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "hub:right",
+      "zone": {
+        "mode": "above",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "var_add",
+          "on": "activate",
+          "repeat_ms": 0,
+          "var": "mode",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "walk",
+      "name": "Tilt the hub: left stick, 8 directions",
+      "system": "gyro",
+      "kind": "stick",
+      "enabled": true,
+      "conditions": [],
+      "x_source": "gyro:right",
+      "y_source": "gyro:forward",
+      "output": "ls",
+      "deadzone": 6,
+      "full": 30,
+      "invert_x": false,
+      "invert_y": false,
+      "directions": 8
+    }
+  ]
+}
