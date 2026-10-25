@@ -1,0 +1,270 @@
+{
+  "name": "V2.1 controller (approximation)",
+  "description": "The V2.1 build: motorised buttons on E (melee X) and A (jump A), back triggers on B (RT) and F (LT), force sensor C (LB), distance sensor D (all artifacts), left hub button D-pad up, right hub button walks on / off, tilt to steer. If a button or trigger reacts the wrong way round, tick Invert direction for its motor in Devices & calibration.",
+  "settings": {
+    "min_press_ms": 100
+  },
+  "variables": [
+    {
+      "name": "moving",
+      "initial": 0,
+      "min": 0,
+      "max": 1,
+      "wrap": true
+    }
+  ],
+  "systems": [
+    {
+      "id": "main",
+      "name": "Buttons",
+      "enabled": true,
+      "conditions": []
+    },
+    {
+      "id": "walking",
+      "name": "Walking (while moving = 1)",
+      "enabled": true,
+      "conditions": [
+        {
+          "source": "var:moving",
+          "mode": "at",
+          "a": 1,
+          "b": null
+        }
+      ]
+    }
+  ],
+  "bindings": [
+    {
+      "id": "melee",
+      "name": "Right motorised button (E): melee X",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:E",
+      "zone": {
+        "mode": "above",
+        "a": 25,
+        "b": null,
+        "hysteresis": 8
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "x"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jump",
+      "name": "Left motorised button (A): jump A",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:A",
+      "zone": {
+        "mode": "above",
+        "a": 25,
+        "b": null,
+        "hysteresis": 8
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ranged",
+      "name": "Right trigger (B): ranged RT",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:B",
+      "zone": {
+        "mode": "above",
+        "a": 20,
+        "b": null,
+        "hysteresis": 5
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "rt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lt",
+      "name": "Left trigger (F): LT",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:F",
+      "zone": {
+        "mode": "above",
+        "a": 20,
+        "b": null,
+        "hysteresis": 5
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "lt"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dodge",
+      "name": "Force sensor (C): LB",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "force:C",
+      "zone": {
+        "mode": "above",
+        "a": 10,
+        "b": null,
+        "hysteresis": 5
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "lb"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "artifacts",
+      "name": "Hand over the distance sensor (D): Y + B + RB",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "distance:D",
+      "zone": {
+        "mode": "below",
+        "a": 7,
+        "b": null,
+        "hysteresis": 2.5
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "y",
+            "b",
+            "rb"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "inventory",
+      "name": "Left hub button: D-pad up",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "hub:left",
+      "zone": {
+        "mode": "above",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "dpad_up"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "walk_toggle",
+      "name": "Right hub button: walking on / off",
+      "system": "main",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "hub:right",
+      "zone": {
+        "mode": "above",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "var_add",
+          "on": "activate",
+          "repeat_ms": 0,
+          "var": "moving",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "forward",
+      "name": "Walking: push the left stick forward",
+      "system": "walking",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "var:moving",
+      "zone": {
+        "mode": "at",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "ls:n"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "steer",
+      "name": "Walking: tilt left / right to steer",
+      "system": "walking",
+      "kind": "axis",
+      "enabled": true,
+      "conditions": [],
+      "source": "gyro:right",
+      "output": "ls:x",
+      "deadzone": [
+        -6,
+        6
+      ],
+      "range": [
+        -30,
+        30
+      ],
+      "invert": false
+    }
+  ]
+}

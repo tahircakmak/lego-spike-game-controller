@@ -1,0 +1,17 @@
+{
+  "name": "Empty",
+  "description": "Nothing bound yet: a starting point.",
+  "settings": {
+    "min_press_ms": 100
+  },
+  "variables": [],
+  "systems": [
+    {
+      "id": "main",
+      "name": "Main",
+      "enabled": true,
+      "conditions": []
+    }
+  ],
+  "bindings": []
+}

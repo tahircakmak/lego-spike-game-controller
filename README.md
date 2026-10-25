@@ -7,12 +7,13 @@ A LEGO SPIKE Prime game controller that plays Minecraft Dungeons on an Xbox thro
 | [`v1/`](v1/README.md) | The first controller: hub tilt to move, force sensor, a motorised trigger and an artifact dial. Has a simulator, demo recording, and [HOW_IT_WORKS.md](v1/HOW_IT_WORKS.md). |
 | [`v2/`](v2/README.md) | The V2 controller for Minecraft Dungeons II: gyro gestures, force sensor, two motorised buttons, and two rear shoulder triggers on one large motor. It has GAMEPLAY / INVENTORY and MOVING / STANDING modes. [Building tutorial on YouTube](https://www.youtube.com/watch?v=_lUhxB4JkKw) by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak). |
 | [`v2.1/`](v2.1/README.md) | The V2.1 controller for Minecraft Dungeons II: two motorised buttons (melee, jump), two back triggers on their own large motors (RT ranged, LT), a force sensor (LB), a distance sensor that fires all artifacts, and gyro steering with walking toggled by the hub button. |
+| [`customsoftwarev1/`](customsoftwarev1/README.md) | **One program for every design.** It detects what is plugged into the hub, calibrates it, and lets you build the controls in a control panel: any LEGO input to any Xbox input (several at once), activation areas and deadzones for motors and the gyro, stick axes and 8 directions, variables, systems and remaps. Saved as loadouts. |
 
 All projects use one virtual environment at the repository root:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r v2/requirements.txt   # also covers v2.1/; v1/ has its own requirements.txt
+.venv/bin/pip install -r v2/requirements.txt   # also covers v2.1/ and customsoftwarev1/; v1/ has its own requirements.txt
 ```
 
 Run each project from its own folder, for example `cd v2.1 && ../.venv/bin/python bridge.py`.
