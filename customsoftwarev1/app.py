@@ -242,9 +242,11 @@ class App:
             await self.hub.run_program(hub_source(self.devices.ports, self.devices.calibration), slot=self.args.slot)
             self.hub_status = "connected"
             self.last_heard, self.silent = time.monotonic(), False
-        except Exception:
+        except Exception as e:
             self.hub_status = "program stopped" if self.hub.connected else "disconnected"
-            raise
+            message = str(e) or type(e).__name__
+            self.note(f"Hub error: {message}")
+            raise RuntimeError(message) from None  # the panel stays open and shows it
         finally:
             self.restarting = False
 

@@ -13,7 +13,8 @@ HERE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HERE))
 
 from calibration import Wizard, distance_settings  # noqa: E402
-from devices import NOTHING_FAR_CM, Devices, hub_source, needs_calibration  # noqa: E402
+from devices import NOTHING_FAR_CM, Devices, hub_source, needs_calibration, ports_from_readings  # noqa: E402
+from spike import protocol as p  # noqa: E402
 from engine import BUTTON_INDEX, Engine, axis_value, empty_loadout, in_zone, normalize_loadout, stick_value  # noqa: E402
 
 LATER = 0.11  # just past the 100 ms shortest press
@@ -328,6 +329,14 @@ class DeviceReadings(unittest.TestCase):
         self.assertEqual(v["gyro:right"], 15)
         self.assertEqual(v["hub:left"], 1)
         self.assertIsNone(d.handle_line("Traceback (most recent call last):"))
+
+    def test_port_detection_ignores_hub_readings(self):
+        readings = [p.Battery(90), p.Imu("top", "front", 0, 0, 0, 0, 0, 1000, 0, 0, 0), p.Display([0] * 25),
+                    p.Motor("A", "medium", 0, 0, 0, 0), p.ForceSensor("C", 0, False), p.DistanceSensor("D", -1),
+                    p.ColorSensor("E", "none", 0, 0, 0, 0), p.ColorMatrix("F", [0] * 9)]
+        self.assertEqual(ports_from_readings(readings),
+                         {"A": {"kind": "motor", "type": "medium"}, "C": {"kind": "force"}, "D": {"kind": "distance"},
+                          "E": {"kind": "color"}, "F": {"kind": "unsupported", "type": "3x3 colour light matrix"}})
 
     def test_distance_nothing(self):
         d = Devices(self.PORTS, None)

@@ -282,7 +282,7 @@ The V2 [HOW_IT_WORKS.md](../v2/HOW_IT_WORKS.md) explains the Bluetooth protocol 
 ```
 
 **What has been tested:**
-- **Software:** the 35 unit tests and `check_chrome.py` pass. The control panel was used with `--no-hub`: sliders, every tab, editing a loadout while it runs, and the remap / stick-swap / 8-direction examples.
+- **Software:** the 36 unit tests and `check_chrome.py` pass. The control panel was used with `--no-hub`: sliders, every tab, editing a loadout while it runs, and the remap / stick-swap / 8-direction examples.
 
 **Not tested yet (no hub was connected while it was written):**
 - the generated hub program on a real hub: port detection, the readings, `motor.absolute_position`, colour sensors, springs

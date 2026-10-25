@@ -63,22 +63,35 @@ def kind_of(reading) -> dict | None:
     return None
 
 
+def ports_from_readings(readings) -> dict:
+    """The port devices in one sensor-stream message. Battery, Imu and Display readings have no port."""
+    found = {}
+    for r in readings:
+        port = getattr(r, "port", None)
+        if isinstance(port, str) and port in PORTS and (k := kind_of(r)):
+            found[port] = k
+    return found
+
+
 async def detect_ports(hub) -> dict:
     """Port letter -> {"kind": motor/force/distance/color/unsupported, "type": ...}, from the sensor stream."""
     found: dict[str, dict] = {}
     seen = asyncio.Event()
 
     def on_sensors(readings):
-        for r in readings:
-            port = getattr(r, "port", None)
-            if port in PORTS and (k := kind_of(r)):
-                found[port] = k
+        found.update(ports_from_readings(readings))
         seen.set()
 
     await hub.start_sensor_stream(on_sensors, interval_ms=50)
-    await asyncio.wait_for(seen.wait(), timeout=3)
-    await asyncio.sleep(0.25)
-    await hub.stop_sensor_stream()
+    try:
+        await asyncio.wait_for(seen.wait(), timeout=3)
+        await asyncio.sleep(0.25)
+    except asyncio.TimeoutError:
+        raise RuntimeError("The hub didn't send its sensor readings, so the ports couldn't be detected. "
+                           "Press Connect to try again.") from None
+    finally:
+        if hub.connected:
+            await hub.stop_sensor_stream()
     return dict(sorted(found.items()))
 
 
