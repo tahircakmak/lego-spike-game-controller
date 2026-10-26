@@ -1,10 +1,10 @@
 # LEGO SPIKE controller for Minecraft Dungeons
 
-A LEGO SPIKE Prime game controller that plays Minecraft Dungeons on an Xbox through Xbox Remote Play in Chrome. The controller shows up in Chrome as a virtual Xbox controller. Built by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak) (controller design and LEGO build) and [@tahircakmak](https://github.com/tahircakmak) (software). [Building tutorial on YouTube](https://www.youtube.com/watch?v=3bgCyz23Tdw&t=104s) by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak).
-
+A LEGO SPIKE Prime game controller that plays Minecraft Dungeons on an Xbox through Xbox Remote Play in Chrome. The controller shows up in Chrome as a virtual Xbox controller. Built by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak) (controller design and LEGO build) and [@tahircakmak](https://github.com/tahircakmak) (software). 
 | Folder | Project |
 |---|---|
-| [`v1/`](v1/README.md) | The first controller: hub tilt to move, force sensor, a motorised trigger and an artifact dial. Has a simulator, demo recording, and [HOW_IT_WORKS.md](v1/HOW_IT_WORKS.md). |
+| [`v1/`](v1/README.md) | The first controller: hub tilt to move, force sensor, a motorised trigger and an artifact dial. Has a simulator, demo recording, and [HOW_IT_WORKS.md](v1/HOW_IT_WORKS.md). [Building tutorial on YouTube](https://www.youtube.com/watch?v=3bgCyz23Tdw&t=104s) by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak).
+ |
 | [`v2/`](v2/README.md) | The V2 controller for Minecraft Dungeons II: gyro gestures, force sensor, two motorised buttons, and two rear shoulder triggers on one large motor. It has GAMEPLAY / INVENTORY and MOVING / STANDING modes. [Building tutorial on YouTube](https://www.youtube.com/watch?v=_lUhxB4JkKw) by [@yusufkeremcakmak](https://github.com/yusufkeremcakmak). |
 | [`v2.1/`](v2.1/README.md) | The V2.1 controller for Minecraft Dungeons II: two motorised buttons (melee, jump), two back triggers on their own large motors (RT ranged, LT), a force sensor (LB), a distance sensor that fires all artifacts, and gyro steering with walking toggled by the hub button. |
 | [`customsoftwarev1/`](customsoftwarev1/README.md) | **One program for every design.** It detects what is plugged into the hub, calibrates it, and lets you build the controls in a control panel: any LEGO input to any Xbox input (several at once), activation areas and deadzones for motors and the gyro, stick axes and 8 directions, variables, systems and remaps. Saved as loadouts. |
