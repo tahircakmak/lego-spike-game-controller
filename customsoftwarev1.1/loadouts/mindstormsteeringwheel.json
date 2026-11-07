@@ -1,0 +1,232 @@
+{
+  "name": "mindstormsteeringwheel",
+  "description": "MINDSTORMS Robot Inventor steering wheel rig: the wheel's motor (port B) steers with the left stick, the lever's motor (port D) is the pedals: push it forward to accelerate (RT), pull it back to brake (LT). Left hub button: handbrake (A). Right hub button: pause (Menu). If the motors are on other ports, change the source of each binding. If steering or the lever works the wrong way round, tick Invert direction for that motor on Devices & calibration. For the best feel, tick Return to rest for both motors there too.",
+  "settings": {
+    "min_press_ms": 100
+  },
+  "variables": [],
+  "systems": [
+    {
+      "id": "driving",
+      "name": "Driving",
+      "enabled": true,
+      "conditions": []
+    }
+  ],
+  "bindings": [
+    {
+      "id": "steer",
+      "name": "Steering wheel (B): left stick left / right",
+      "system": "driving",
+      "kind": "axis",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:B",
+      "output": "ls:x",
+      "deadzone": [
+        -3,
+        3
+      ],
+      "range": null,
+      "invert": false
+    },
+    {
+      "id": "throttle",
+      "name": "Lever (D) forward: accelerate (RT)",
+      "system": "driving",
+      "kind": "axis",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:D",
+      "output": "rt",
+      "deadzone": [
+        -4,
+        4
+      ],
+      "range": null,
+      "invert": false
+    },
+    {
+      "id": "brake",
+      "name": "Lever (D) back: brake (LT)",
+      "system": "driving",
+      "kind": "axis",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:D",
+      "output": "lt",
+      "deadzone": [
+        -4,
+        4
+      ],
+      "range": null,
+      "invert": true
+    },
+    {
+      "id": "handbrake",
+      "name": "Left hub button: handbrake (A)",
+      "system": "driving",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "hub:left",
+      "zone": {
+        "mode": "above",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "hold",
+          "outputs": [
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pause",
+      "name": "Right hub button: pause (Menu)",
+      "system": "driving",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "hub:right",
+      "zone": {
+        "mode": "above",
+        "a": 1,
+        "b": null,
+        "hysteresis": 0
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "menu"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "blbdt7q",
+      "name": "A",
+      "system": "driving",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:C",
+      "zone": {
+        "mode": "below",
+        "a": -15,
+        "b": null,
+        "hysteresis": 3
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "a"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "bk3628b",
+      "name": "B",
+      "system": "driving",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:C",
+      "zone": {
+        "mode": "above",
+        "a": 15,
+        "b": null,
+        "hysteresis": 3
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "b"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "bg09mqy",
+      "name": "X",
+      "system": "driving",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:E",
+      "zone": {
+        "mode": "below",
+        "a": -15,
+        "b": null,
+        "hysteresis": 3
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "x"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    },
+    {
+      "id": "bm6h01h",
+      "name": "Y",
+      "system": "driving",
+      "kind": "zone",
+      "enabled": true,
+      "conditions": [],
+      "source": "motor:E",
+      "zone": {
+        "mode": "above",
+        "a": 15,
+        "b": null,
+        "hysteresis": 3
+      },
+      "actions": [
+        {
+          "type": "tap",
+          "on": "activate",
+          "outputs": [
+            "y"
+          ],
+          "repeat_ms": 0
+        }
+      ]
+    }
+  ],
+  "devices": {
+    "B": {
+      "kind": "motor",
+      "type": "medium"
+    },
+    "C": {
+      "kind": "motor",
+      "type": "medium"
+    },
+    "D": {
+      "kind": "motor",
+      "type": "medium"
+    },
+    "E": {
+      "kind": "motor",
+      "type": "medium"
+    }
+  }
+}

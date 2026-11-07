@@ -1,0 +1,4 @@
+bleak>=0.22
+playwright>=1.45
+pyserial>=3.5
+pyobjc-framework-IOBluetooth>=10; sys_platform == "darwin"  # MINDSTORMS hubs over Bluetooth
